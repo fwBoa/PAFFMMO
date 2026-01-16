@@ -1,0 +1,18 @@
+services:
+  web:
+    build: .
+    container_name: django_web_dev
+    command: >
+      sh -c "python manage.py migrate --run-syncdb &&
+             python manage.py generate_data --heroes=100 &&
+             python manage.py createsuperuser --username=admin --email=admin@paffmmo.com --noinput ||
+             true &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=paffmmo_project.settings
+      - PYTHONDONTWRITEBYTECODE=1
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    restart: unless-stopped

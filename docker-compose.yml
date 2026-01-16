@@ -1,0 +1,41 @@
+services:
+  db:
+    image: gvenzl/oracle-free:latest
+    container_name: oracle_db
+    environment:
+      - ORACLE_PASSWORD=oracle
+      - APP_USER=system
+      - APP_USER_PASSWORD=oracle
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "tnsping", "FREEPDB1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  web:
+    build: .
+    container_name: django_web
+    command: >
+      sh -c "python manage.py migrate --run-syncdb &&
+             python manage.py generate_data --heroes=100 &&
+             python manage.py createsuperuser --username=admin --email=admin@paffmmo.com --noinput ||
+             true &&
+             gunicorn --bind 0.0.0.0:8000 paffmmo_project.wsgi:application"
+    environment:
+      - DJANGO_SETTINGS_MODULE=paffmmo_project.settings
+      - PYTHONDONTWRITEBYTECODE=1
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  oracle_data:

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAFFMMO - Atlas Interactif</title>
+    <link rel="stylesheet" href="https://unpkg.com/nes.css@latest/css/nes.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Press Start 2P', cursive; }
+        body { 
+            background-color: #1a1a2e; 
+            color: #fff; 
+            margin: 0;
+            background-image: 
+                radial-gradient(ellipse at top, #2a3a4a 0%, transparent 50%),
+                linear-gradient(to bottom, #1a1a2e 0%, #0f0f1a 100%);
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .hero-banner {
+            width: 100%;
+            max-width: 100%;
+            display: block;
+            margin-bottom: 20px;
+            border-bottom: 4px solid #f4c430;
+            box-shadow: 0 4px 20px rgba(244, 196, 48, 0.3);
+        }
+        .search-box { display: flex; gap: 15px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap; }
+        .search-box input { 
+            padding: 15px; 
+            border: 4px solid #f4c430; 
+            background: #0f0f1a;
+            color: #fff;
+            width: 350px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        .search-box input:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(244, 196, 48, 0.5);
+        }
+        .heroes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+        .hero-card { 
+            background: linear-gradient(145deg, #1a1a2e 0%, #252540 100%);
+            border: 4px solid #4a4a6a;
+            padding: 20px; 
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #f4c430, #4ecdc4, #f4c430);
+        }
+        .hero-card:hover { 
+            transform: translateY(-5px);
+            border-color: #f4c430;
+            box-shadow: 0 10px 30px rgba(244, 196, 48, 0.2);
+        }
+        .hero-name { color: #f4c430; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .hero-class { color: #4ecdc4; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        .hero-stats { margin: 15px 0; font-size: 9px; line-height: 2; }
+        .hp-bar { 
+            width: 100%; 
+            height: 24px; 
+            background: #0f0f1a; 
+            border: 3px solid #4a4a6a; 
+            margin: 10px 0;
+            position: relative;
+        }
+        .hp-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+            transition: width 0.3s;
+        }
+        .hp-fill::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+        }
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
+        .pagination button { 
+            padding: 12px 20px; 
+            cursor: pointer;
+            border: 3px solid #4a4a6a;
+            background: #1a1a2e;
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+        .pagination button:hover:not(:disabled) {
+            border-color: #f4c430;
+            color: #f4c430;
+        }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .view-toggle { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .view-toggle button {
+            border: 3px solid #4a4a6a;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .view-toggle button.is-primary {
+            border-color: #f4c430;
+            color: #f4c430;
+        }
+        .skill-badge { 
+            display: inline-block; 
+            padding: 6px 10px; 
+            margin: 3px; 
+            font-size: 8px; 
+            border: 2px solid;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .skill-physical { border-color: #e74c3c; color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+        .skill-magical { border-color: #9b59b6; color: #9b59b6; background: rgba(155, 89, 182, 0.1); }
+        .skill-healing { border-color: #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
+        .skill-mixed { border-color: #f39c12; color: #f39c12; background: rgba(243, 156, 18, 0.1); }
+        .hero-detail { 
+            background: linear-gradient(145deg, #1a1a2e 0%, #252540 100%);
+            border: 4px solid #f4c430;
+            padding: 30px;
+            max-width: 650px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .hero-detail::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 2px solid rgba(244, 196, 48, 0.3);
+            pointer-events: none;
+        }
+        .back-btn { margin-bottom: 20px; }
+        .loading { text-align: center; padding: 50px; color: #4ecdc4; }
+        .stats-bar { 
+            display: flex; 
+            justify-content: center; 
+            gap: 30px; 
+            margin-bottom: 30px; 
+            font-size: 10px;
+            flex-wrap: wrap;
+        }
+        .stat-item { 
+            text-align: center; 
+            background: rgba(244, 196, 48, 0.1);
+            padding: 15px 25px;
+            border: 3px solid #4a4a6a;
+            border-radius: 4px;
+        }
+        .stat-value { 
+            color: #f4c430; 
+            font-size: 20px; 
+            margin-bottom: 5px;
+        }
+        .filter-select {
+            padding: 15px;
+            background: #0f0f1a;
+            color: #fff;
+            border: 4px solid #f4c430;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .filter-select:focus {
+            outline: none;
+            box-shadow: 0 0 15px rgba(244, 196, 48, 0.5);
+        }
+        .filter-select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .level-badge {
+            display: inline-block;
+            background: #f4c430;
+            color: #1a1a2e;
+            padding: 4px 8px;
+            font-size: 8px;
+            border-radius: 2px;
+            margin-left: 10px;
+        }
+        .region-tag {
+            display: inline-block;
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+            padding: 2px 6px;
+            font-size: 8px;
+            border: 1px solid #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+{% verbatim %}
+    <div class="container" id="app">
+        <img src="/static/img/image.png" alt="PAFFMMO - Atlas Interactif" class="hero-banner">
+
+        <div class="stats-bar" v-if="stats">
+            <div class="stat-item">
+                <div class="stat-value">{{ stats.total_heroes }}</div>
+                <div>Héros</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ stats.average_level }}</div>
+                <div>Niveau Moyen</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ stats.total_gold.toLocaleString() }}</div>
+                <div>Or Total</div>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <input 
+                type="text" 
+                v-model="searchQuery" 
+                @input="searchHeroes"
+                placeholder="Rechercher un héros..."
+            >
+            <select v-model="selectedClass" @change="filterHeroes" class="filter-select">
+                <option value="">Toutes les classes</option>
+                <option value="warrior">Guerrier</option>
+                <option value="mage">Mage</option>
+                <option value="archer">Archer</option>
+                <option value="rogue">Voleur</option>
+                <option value="paladin">Paladin</option>
+                <option value="cleric">Clerc</option>
+                <option value="necromancer">Nécromancien</option>
+                <option value="barbarian">Barbare</option>
+            </select>
+        </div>
+
+        <div class="view-toggle">
+            <button class="nes-btn" :class="{ 'is-primary': viewMode === 'grid' }" @click="viewMode = 'grid'">Grille</button>
+            <button class="nes-btn" :class="{ 'is-primary': viewMode === 'list' }" @click="viewMode = 'list'">Liste</button>
+        </div>
+
+        <div v-if="loading" class="loading">
+            <p>Chargement des héros...</p>
+        </div>
+
+        <div v-else-if="selectedHero" class="hero-detail">
+            <button class="nes-btn is-primary back-btn" @click="selectedHero = null">← Retour</button>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                <h2 class="hero-name" style="font-size: 20px; margin: 0;">{{ selectedHero.nickname }}</h2>
+                <span class="level-badge" style="font-size: 12px; padding: 6px 12px;">Lvl {{ selectedHero.level }}</span>
+            </div>
+            <p class="hero-class">{{ selectedHero.job_class_display }} <span v-if="selectedHero.region_name" class="region-tag">{{ selectedHero.region_name }}</span></p>
+            
+            <div class="hp-bar">
+                <div class="hp-fill" :style="{ width: selectedHero.hp_percentage + '%' }"></div>
+            </div>
+            <p style="text-align: center; font-size: 10px; margin-top: 5px;">{{ selectedHero.hp_current }} / {{ selectedHero.max_hp }} HP</p>
+
+            <div class="hero-stats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px;">
+                <p>✨ XP: {{ selectedHero.xp.toLocaleString() }}</p>
+                <p>💰 Or: {{ selectedHero.gold.toLocaleString() }}</p>
+            </div>
+
+            <div v-if="selectedHero.skills && selectedHero.skills.length" style="margin-top: 20px;">
+                <p style="color: #f4c430; font-size: 10px; margin-bottom: 10px;">🗡️ COMPÉTENCES</p>
+                <div v-for="skill in selectedHero.skills" :key="skill.id">
+                    <span class="skill-badge" :class="'skill-' + skill.damage_type">
+                        {{ skill.name }} ({{ skill.mana_cost }} mana)
+                    </span>
+                </div>
+            </div>
+
+            <div v-if="selectedHero.biography" style="margin-top: 20px;">
+                <p style="color: #f4c430; font-size: 10px; margin-bottom: 10px;">📖 BIOGRAPHIE</p>
+                <p style="font-size: 10px; line-height: 1.8; text-align: justify; color: #ccc;">{{ selectedHero.biography }}</p>
+            </div>
+        </div>
+
+        <div v-else class="heroes-grid" :class="{ 'nes-table': viewMode === 'list' }">
+            <div 
+                v-for="hero in heroes" 
+                :key="hero.id" 
+                class="hero-card"
+                :style="viewMode === 'list' ? 'display: flex; align-items: center; gap: 20px;' : ''"
+            >
+                <div @click="selectHero(hero)" style="cursor: pointer; width: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <h3 class="hero-name">{{ hero.nickname }}</h3>
+                        <span class="level-badge">Lvl {{ hero.level }}</span>
+                    </div>
+                    <p class="hero-class">{{ hero.job_class_display }} <span v-if="hero.region_name" class="region-tag">{{ hero.region_name }}</span></p>
+                    
+                    <div class="hp-bar">
+                        <div class="hp-fill" :style="{ width: hero.hp_percentage + '%' }"></div>
+                    </div>
+                    
+                    <div class="hero-stats">
+                        <p>✨ XP: {{ hero.xp.toLocaleString() }} &nbsp;|&nbsp; 💰 {{ hero.gold.toLocaleString() }} PO</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination" v-if="!selectedHero">
+            <button class="nes-btn" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">Précédent</button>
+            <span style="padding: 10px;">Page {{ currentPage }} / {{ totalPages }}</span>
+            <button class="nes-btn" @click="goToPage(currentPage + 1)" :disabled="currentPage >= totalPages">Suivant</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        const { createApp, ref, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const heroes = ref([]);
+                const stats = ref(null);
+                const loading = ref(true);
+                const searchQuery = ref('');
+                const selectedClass = ref('');
+                const currentPage = ref(1);
+                const totalPages = ref(1);
+                const selectedHero = ref(null);
+                const viewMode = ref('grid');
+
+                const fetchHeroes = async () => {
+                    loading.value = true;
+                    try {
+                        let url = '/api/heroes/?page=' + currentPage.value;
+                        if (searchQuery.value) url += '&search=' + searchQuery.value;
+                        if (selectedClass.value) url += '&job_class=' + selectedClass.value;
+                        
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        heroes.value = data.results || data;
+                        totalPages.value = Math.ceil((data.count || heroes.value.length) / 10);
+                    } catch (error) {
+                        console.error('Erreur:', error);
+                    }
+                    loading.value = false;
+                };
+
+                const fetchStats = async () => {
+                    try {
+                        const response = await fetch('/api/stats/');
+                        stats.value = await response.json();
+                    } catch (error) {
+                        console.error('Erreur stats:', error);
+                    }
+                };
+
+                const searchHeroes = () => {
+                    currentPage.value = 1;
+                    fetchHeroes();
+                };
+
+                const filterHeroes = () => {
+                    currentPage.value = 1;
+                    fetchHeroes();
+                };
+
+                const goToPage = (page) => {
+                    if (page >= 1 && page <= totalPages.value) {
+                        currentPage.value = page;
+                        fetchHeroes();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                };
+
+                const selectHero = (hero) => {
+                    selectedHero.value = hero;
+                };
+
+                onMounted(() => {
+                    fetchHeroes();
+                    fetchStats();
+                });
+
+                return {
+                    heroes,
+                    stats,
+                    loading,
+                    searchQuery,
+                    selectedClass,
+                    currentPage,
+                    totalPages,
+                    selectedHero,
+                    viewMode,
+                    searchHeroes,
+                    filterHeroes,
+                    goToPage,
+                    selectHero
+                };
+            }
+        }).mount('#app');
+    </script>
+{% endverbatim %}
+</body>
+</html>
