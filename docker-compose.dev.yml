@@ -1,18 +1,29 @@
+# PAFFMMO - Docker Compose Développement
+# ========================================
+# Utilise SQLite pour un démarrage rapide
+
 services:
   web:
     build: .
-    container_name: django_web_dev
+    container_name: paffmmo_web_dev
     command: >
       sh -c "python manage.py migrate --run-syncdb &&
-             python manage.py generate_data --heroes=100 &&
-             python manage.py createsuperuser --username=admin --email=admin@paffmmo.com --noinput ||
-             true &&
+             python manage.py generate_data --heroes=100 || true &&
+             python manage.py createsuperuser --username=admin --email=admin@paffmmo.com --noinput || true &&
              python manage.py runserver 0.0.0.0:8000"
     environment:
-      - DJANGO_SETTINGS_MODULE=paffmmo_project.settings
-      - PYTHONDONTWRITEBYTECODE=1
+      DJANGO_SETTINGS_MODULE: paffmmo_project.settings
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "*"
+      DATABASE_ENGINE: sqlite3
     ports:
       - "8000:8000"
     volumes:
       - .:/app
+      - dev_static:/app/staticfiles
     restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+volumes:
+  dev_static:
